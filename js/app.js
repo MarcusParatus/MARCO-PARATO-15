@@ -326,7 +326,14 @@
         if(selected.length === 0) return alert("Seleziona almeno un posto.");
 
         if(action === 'free') {
-            // Libera posti direttamente
+            // Chiede conferma se tra i posti selezionati ci sono prenotazioni: i dati cliente andrebbero persi
+            const evt = localEvents[currentEventId];
+            const prenotati = selected.map(k => { const [a, r, i] = k.split('|'); return evt.maps[a][r][i]; })
+                                      .filter(s => s.state !== 'free');
+            if(prenotati.length > 0) {
+                const nomi = [...new Set(prenotati.filter(s => s.booking).map(s => s.booking.cognome))].slice(0, 5).join(', ');
+                if(!confirm(`Stai per liberare ${prenotati.length} posti occupati${nomi ? ' (' + nomi + ')' : ''}.\n\nI dati del cliente verranno cancellati. Confermi?`)) return;
+            }
             updateSeatsOnCloud('free', null);
         } else {
             // Richiede dati cliente
