@@ -174,7 +174,6 @@
         .then(() => { 
             document.getElementById('createEventForm').reset(); 
             selectEvent(newId); 
-            if(window.innerWidth <= 768) toggleSidebar(); 
         })
         .catch(err => alert("Errore: " + err.message));
     }
@@ -234,7 +233,7 @@
         selected = [];
         updateHeader();
         renderMap();
-        if(window.innerWidth <= 768) toggleSidebar();
+        closeSidebar();
     }
 
     function updateHeader() {
@@ -530,7 +529,7 @@
                 if(foundArea === 'platea') tabs[0].classList.add('active'); else tabs[1].classList.add('active');
             }
             renderMap();
-            if(window.innerWidth <= 768) toggleSidebar(); // Chiudi menu su mobile
+            closeSidebar(); // Chiudi menu su mobile
             alert(`Trovati ${selected.length} posti.`);
         } else {
             alert("Nessuna prenotazione trovata.");
@@ -688,8 +687,13 @@
     function toggleSidebar() { 
         const sb = document.getElementById('mainSidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        sb.classList.toggle('active'); 
+        sb.classList.toggle('active');
         overlay.classList.toggle('active');
+    }
+    // Chiude il menu laterale (se è già chiuso non fa nulla, a differenza di toggleSidebar)
+    function closeSidebar() {
+        document.getElementById('mainSidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
     }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     // Rende un testo innocuo prima di inserirlo nella pagina come HTML (nomi, titoli, telefoni)
