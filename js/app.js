@@ -194,7 +194,8 @@
         }
 
         // Ordina per data
-        keys.sort((a,b) => localEvents[b].id.localeCompare(localEvents[a].id));
+        const quando = k => (localEvents[k].date || '') + ' ' + (localEvents[k].time || '');
+        keys.sort((a,b) => quando(a).localeCompare(quando(b)));
 
         keys.forEach(key => {
             const evt = localEvents[key];
