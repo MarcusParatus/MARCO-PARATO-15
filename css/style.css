@@ -188,6 +188,20 @@
     .modal.active { display: flex; }
     .modal-content { background: white; padding: 20px; border-radius: 10px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
 
+    /* LISTA EVENTI */
+    .event-item {
+        position: relative; padding: 10px 40px 10px 10px; margin-bottom: 6px;
+        background: rgba(255,255,255,0.08); border-radius: 6px; cursor: pointer;
+        border-left: 4px solid transparent;
+    }
+    .event-item.active { background: rgba(52,152,219,0.35); border-left-color: var(--primary); }
+    .delete-btn {
+        position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+        width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(231,76,60,0.85); color: white; font-size: 0.8rem;
+    }
+
     /* REGISTRO VISIVO */
     .registry-card { border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 5px solid #ccc; background: #fff; }
     .registry-card.paid { border-left-color: var(--danger); }
