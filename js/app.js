@@ -379,7 +379,9 @@
         db.ref().update(updates)
             .then(() => {
                 selected = [];
-                // Non serve chiamare renderMap, il listener on('value') lo farà automaticamente
+                // Il listener on('value') ridisegna PRIMA di questo punto, con la selezione ancora attiva:
+                // serve un ridisegno per togliere l'evidenziazione
+                renderMap();
             })
             .catch(err => alert("Errore di sincronizzazione: " + err.message));
     }
