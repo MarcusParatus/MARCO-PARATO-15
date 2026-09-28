@@ -57,6 +57,8 @@
         height: 50px; flex-shrink: 0; gap: 5px;
     }
 
+    .top-actions { display: flex; gap: 5px; flex-shrink: 0; }
+
     .mobile-menu-btn {
         display: none; background: var(--primary); color: white; border: none;
         padding: 8px 12px; border-radius: 4px; font-size: 1.2rem;
