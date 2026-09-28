@@ -1,0 +1,195 @@
+    :root {
+        --primary: #3498db; --secondary: #2c3e50; --success: #27ae60;
+        --danger: #e74c3c; --warning: #f39c12; --light: #ecf0f1;
+        --sidebar-width: 300px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f0f2f5;
+        height: 100dvh; /* Altezza fissa che ignora la barra indirizzi */
+        width: 100vw;
+        overflow: hidden; /* Blocca lo scroll della pagina intera (scrolliamo solo la mappa) */
+    }
+
+    .app-container { display: flex; height: 100%; width: 100%; position: relative; }
+
+    /* --- SIDEBAR (Modificata per lo scroll) --- */
+    .sidebar {
+        width: var(--sidebar-width); 
+        background: var(--secondary); 
+        color: white;
+        padding: 15px; 
+        display: flex; 
+        flex-direction: column; 
+        z-index: 2000;
+        transition: transform 0.3s ease; 
+        flex-shrink: 0; 
+        box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+        
+        /* QUESTA È LA MODIFICA CHIAVE: */
+        height: 100%;
+        overflow-y: auto; /* Abilita lo scroll se i tasti sono troppi */
+    }
+
+    /* --- LISTA EVENTI (Modificata per non sparire) --- */
+    #eventListContainer { 
+        flex: 1; 
+        display: flex; 
+        flex-direction: column; 
+        margin: 10px 0;
+        
+        /* QUESTA IMPEDISCE CHE LA LISTA SPARISCA: */
+        min-height: 250px; 
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+        flex: 1; display: flex; flex-direction: column; background: #fff;
+        overflow: hidden; width: 100%; position: relative;
+    }
+
+    .top-bar {
+        padding: 5px 10px; background: var(--light); border-bottom: 1px solid #bdc3c7;
+        display: flex; justify-content: space-between; align-items: center;
+        height: 50px; flex-shrink: 0; gap: 5px;
+    }
+
+    .mobile-menu-btn {
+        display: none; background: var(--primary); color: white; border: none;
+        padding: 8px 12px; border-radius: 4px; font-size: 1.2rem;
+    }
+
+    .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 5px; }
+    .status-online { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+
+    /* UI ELEMENTS */
+    .form-group { margin-bottom: 8px; }
+    .form-group label { display: block; margin-bottom: 3px; font-size: 0.8rem; }
+    .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    
+    .btn {
+        padding: 10px; border: none; border-radius: 4px; cursor: pointer;
+        font-weight: 600; width: 100%; margin-bottom: 5px; font-size: 0.9rem;
+        text-align: center; color: white; display: flex; justify-content: center; align-items: center;
+    }
+    .btn-primary { background: var(--primary); }
+    .btn-success { background: var(--success); }
+    .btn-danger { background: var(--danger); }
+    .btn-warning { background: var(--warning); }
+    .btn-info { background: #1abc9c; }
+    .btn-sec { background: #7f8c8d; }
+
+    /* --- MAPPA CON SCROLL (MODIFICA PRINCIPALE) --- */
+    .seat-map-container {
+        flex: 1; /* Prende tutto lo spazio disponibile */
+        overflow: auto; /* ABILITA LO SCROLL IN TUTTE LE DIREZIONI */
+        background: #e0e5ec; 
+        padding: 20px;
+        position: relative;
+        /* Per rendere lo scroll fluido su iPhone */
+        -webkit-overflow-scrolling: touch; 
+        /* Centra la mappa se è più piccola dello schermo, ma permette scroll se è più grande */
+        display: grid; 
+        place-items: start center; 
+    }
+
+    #seatMap {
+        background: white; padding: 15px; border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        display: inline-block; /* Permette al div di allargarsi quanto vuole */
+        white-space: nowrap; /* Impedisce che le file vadano a capo */
+        margin: auto; /* Aiuta il centraggio */
+    }
+
+    .row { 
+        display: flex; 
+        align-items: center; 
+        margin-bottom: 4px; 
+        width: max-content; /* La riga è larga quanto serve, non si schiaccia */
+    }
+    .row-label { width: 20px; font-weight: bold; color: #7f8c8d; text-align: center; flex-shrink: 0; font-size: 0.7rem; }
+    
+    /* SEDIE GRANDI (STANDARD) */
+    .seat {
+        width: 34px; height: 34px; margin: 2px;
+        border-radius: 5px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; color: white; font-weight: bold;
+        user-select: none; flex-shrink: 0;
+        transition: transform 0.1s;
+    }
+    .seat.free { background: var(--success); }
+    .seat.blocked { background: var(--warning); }
+    .seat.paid { background: var(--danger); }
+    .seat.omaggio { background: var(--primary); }
+    .seat.empty { background: transparent; cursor: default; pointer-events: none; }
+    .seat.selected { 
+        outline: 3px solid #2c3e50; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        z-index: 10; transform: scale(1.15); 
+    }
+    .seat.hidden { display: none; }
+
+    .tabs { display: flex; background: white; border-bottom: 1px solid #ddd; overflow-x: auto; flex-shrink: 0; height: 45px; }
+    .tab { padding: 10px; cursor: pointer; white-space: nowrap; flex: 1; text-align: center; display:flex; align-items:center; justify-content:center; }
+    .tab.active { border-bottom: 4px solid var(--primary); color: var(--primary); font-weight: bold; background: #f8f9fa; }
+
+    .counters {
+        display: flex; justify-content: space-around; padding: 8px; background: white;
+        font-size: 0.8rem; border-bottom: 1px solid #eee; flex-shrink: 0;
+    }
+    .counter span { font-weight: bold; font-size: 0.95rem; }
+
+    .action-panel {
+        background: white; padding: 8px; border-top: 1px solid #ddd;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+        flex-shrink: 0; padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+    .action-btn { 
+        padding: 12px; border: none; border-radius: 6px; color: white; 
+        font-weight: bold; cursor: pointer; font-size: 0.85rem; width: 100%;
+    }
+
+    /* MOBILE: SOLO MENU LATERALE NASCOSTO, IL RESTO RIMANE GRANDE E SCROLLABILE */
+    /* --- OTTIMIZZAZIONE MOBILE (AGGIORNATA PER IPHONE) --- */
+    @media (max-width: 768px) {
+        .app-container { flex-direction: column; }
+        
+        /* Sidebar Mobile */
+        .sidebar {
+            position: fixed; top: 0; left: 0; 
+            height: 100%; width: 85%; max-width: 320px;
+            transform: translateX(-100%); z-index: 2000;
+            /* Aggiunge spazio in fondo per evitare che i tasti finiscano sotto la barra di Safari */
+            padding-bottom: 100px !important; 
+        }
+        .sidebar.active { transform: translateX(0); }
+
+        /* Overlay scuro */
+        #sidebarOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1500; }
+        #sidebarOverlay.active { display: block; }
+
+        /* Tasto Menu */
+        .mobile-menu-btn { display: block; }
+
+        /* FIX FONDAMENTALE PER VEDERE I TASTI DI BACKUP SU IPHONE */
+        /* Impedisce alla lista eventi di occupare tutto lo spazio verticale */
+        #eventListContainer {
+            flex: 0 0 auto !important; /* Smette di allungarsi all'infinito */
+            max-height: 25vh !important; /* Occupa massimo il 25% dello schermo */
+            min-height: 120px !important;
+        }
+    }
+
+    /* MODALI */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center; padding: 15px; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; padding: 20px; border-radius: 10px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+    /* REGISTRO VISIVO */
+    .registry-card { border: 1px solid #eee; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 5px solid #ccc; background: #fff; }
+    .registry-card.paid { border-left-color: var(--danger); }
+    .registry-card.blocked { border-left-color: var(--warning); }
+    .registry-card.omaggio { border-left-color: var(--primary); }
