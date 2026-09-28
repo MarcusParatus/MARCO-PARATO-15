@@ -599,8 +599,10 @@
         if(format === 'A6') dim = [105, 148];
         if(format === '80') dim = [80, 150];
 
-        selected.forEach(key => {
-            const doc = new jsPDF({ unit: 'mm', format: dim });
+        // Un solo PDF con una pagina per biglietto: sui telefoni un download multiplo viene spesso bloccato
+        const doc = new jsPDF({ unit: 'mm', format: dim });
+        selected.forEach((key, n) => {
+            if(n > 0) doc.addPage(dim);
             const [area, row, idx] = key.split('|');
             const seat = evt.maps[area][row][idx];
             const booking = seat.booking || { cognome: '---', nome: '' };
@@ -677,8 +679,8 @@
             if(nomeCompleto.length > 22) nomeCompleto = nomeCompleto.substring(0,22) + "...";
             doc.text(nomeCompleto, w/2, y, {align:"center"});
 
-            doc.save(`Ticket_${booking.cognome}_${seat.id}.pdf`);
         });
+        doc.save(`Biglietti_${evt.title.replace(/[^a-z0-9]/gi, '_').substring(0, 30)}_${selected.length}.pdf`);
         closeModal('ticketModal');
     }
 
