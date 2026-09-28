@@ -204,10 +204,11 @@
             if(evt.id === currentEventId) div.className += ' active';
             
             div.innerHTML = `
-                <div style="font-weight:bold;">${evt.title}</div>
-                <div style="font-size:0.8rem; opacity:0.8;">${formatDate(evt.date)} ore ${evt.time}</div>
-                <div class="delete-btn" onclick="deleteEvent('${evt.id}', event)">✕</div>
+                <div style="font-weight:bold;">${esc(evt.title)}</div>
+                <div style="font-size:0.8rem; opacity:0.8;">${esc(formatDate(evt.date))} ore ${esc(evt.time)}</div>
+                <div class="delete-btn">✕</div>
             `;
+            div.querySelector('.delete-btn').onclick = (e) => deleteEvent(evt.id, e);
             div.onclick = (e) => {
                 if(!e.target.classList.contains('delete-btn')) selectEvent(evt.id);
             };
@@ -451,14 +452,14 @@
         const seat = evt.maps[area][row][idx];
 
         let html = `<div style="font-size:1.2rem; font-weight:bold; margin-bottom:10px;">
-                        ${area.toUpperCase()} - Fila ${row} - Posto ${seat.id}
+                        ${esc(area.toUpperCase())} - Fila ${esc(row)} - Posto ${esc(seat.id)}
                     </div>
-                    <div>Stato: <b>${seat.state.toUpperCase()}</b></div>`;
-        
+                    <div>Stato: <b>${esc(seat.state.toUpperCase())}</b></div>`;
+
         if(seat.booking) {
             html += `<hr style="margin:10px 0; border:0; border-top:1px solid #eee;">
-                     <div>👤 ${seat.booking.cognome} ${seat.booking.nome}</div>
-                     <div style="margin-top:5px;">📞 <a href="tel:${seat.booking.telefono}">${seat.booking.telefono}</a></div>`;
+                     <div>👤 ${esc(seat.booking.cognome)} ${esc(seat.booking.nome)}</div>
+                     <div style="margin-top:5px;">📞 <a href="tel:${esc(seat.booking.telefono)}">${esc(seat.booking.telefono)}</a></div>`;
         }
         
         document.getElementById('detailsContent').innerHTML = html;
@@ -541,9 +542,9 @@
                 const div = document.createElement('div');
                 div.style.cssText = `border:1px solid #eee; padding:10px; margin-bottom:5px; border-left:5px solid ${color}; background:white;`;
                 div.innerHTML = `
-                    <div style="font-weight:bold;">${item.name}</div>
-                    <div style="font-size:0.8rem; color:#666;">${item.seat} - ${item.state.toUpperCase()}</div>
-                    ${item.phone ? `<div style="font-size:0.8rem;">📞 ${item.phone}</div>` : ''}
+                    <div style="font-weight:bold;">${esc(item.name)}</div>
+                    <div style="font-size:0.8rem; color:#666;">${esc(item.seat)} - ${esc(item.state.toUpperCase())}</div>
+                    ${item.phone ? `<div style="font-size:0.8rem;">📞 ${esc(item.phone)}</div>` : ''}
                 `;
                 container.appendChild(div);
             });
@@ -658,6 +659,10 @@
         overlay.classList.toggle('active');
     }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    // Rende un testo innocuo prima di inserirlo nella pagina come HTML (nomi, titoli, telefoni)
+    function esc(v) {
+        return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    }
     function formatDate(d) { 
         if(!d) return '';
         const parts = d.split('-'); // assume YYYY-MM-DD
