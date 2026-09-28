@@ -1,0 +1,29 @@
+{
+  "rules": {
+    "events": {
+      ".read": "auth !== null && (root.child('admin').child(auth.uid).val() === true || root.child('utenti').child(auth.uid).child('stato').val() === 'approvato')",
+      ".write": "auth !== null && (root.child('admin').child(auth.uid).val() === true || root.child('utenti').child(auth.uid).child('stato').val() === 'approvato')"
+    },
+    "events_deleted": {
+      ".read": "auth !== null && (root.child('admin').child(auth.uid).val() === true || root.child('utenti').child(auth.uid).child('stato').val() === 'approvato')",
+      ".write": "auth !== null && (root.child('admin').child(auth.uid).val() === true || root.child('utenti').child(auth.uid).child('stato').val() === 'approvato')"
+    },
+    "events_import_history": {
+      ".read": "auth !== null && (root.child('admin').child(auth.uid).val() === true || root.child('utenti').child(auth.uid).child('stato').val() === 'approvato')",
+      ".write": "auth !== null && (root.child('admin').child(auth.uid).val() === true || root.child('utenti').child(auth.uid).child('stato').val() === 'approvato')"
+    },
+    "admin": {
+      "$uid": {
+        ".read": "auth !== null && auth.uid === $uid"
+      }
+    },
+    "utenti": {
+      ".read": "auth !== null && root.child('admin').child(auth.uid).val() === true",
+      "$uid": {
+        ".read": "auth !== null && auth.uid === $uid",
+        ".write": "auth !== null && (root.child('admin').child(auth.uid).val() === true || (auth.uid === $uid && !data.exists() && newData.child('stato').val() === 'in_attesa'))",
+        ".validate": "newData.hasChildren(['nome', 'email', 'stato']) && newData.child('nome').isString() && newData.child('nome').val().length <= 100 && (newData.child('stato').val() === 'in_attesa' || newData.child('stato').val() === 'approvato' || newData.child('stato').val() === 'revocato')"
+      }
+    }
+  }
+}

@@ -85,9 +85,8 @@
     }
 
     // --- AVVIO ---
+    // Gli ascoltatori del database partono solo dopo l'accesso approvato (vedi js/accesso.js)
     document.addEventListener('DOMContentLoaded', () => {
-        setupFirebaseListeners();
-        
         // Mobile Sidebar handling
         if(window.innerWidth <= 768) document.getElementById('closeSidebarBtn').style.display = 'block';
 
@@ -134,7 +133,22 @@
                 currentEventId = null;
                 document.getElementById('seatMap').innerHTML = '<div style="padding:20px; text-align:center;">Evento eliminato</div>';
             }
+        }, (err) => {
+            // Il database ha rifiutato la lettura (es. accesso revocato): torna alla schermata di accesso
+            console.error('Lettura eventi rifiutata:', err);
+            if (typeof accessoNegato === 'function') accessoNegato();
         });
+    }
+
+    // Ferma l'ascolto del database e svuota i dati in memoria (all'uscita o alla revoca)
+    function stopFirebaseListeners() {
+        db.ref('events').off();
+        db.ref('.info/connected').off();
+        localEvents = {};
+        currentEventId = null;
+        selected = [];
+        document.getElementById('eventList').innerHTML = '';
+        document.getElementById('seatMap').innerHTML = '';
     }
 
     // --- GESTIONE EVENTI ---
@@ -374,7 +388,10 @@
         const data = {
             cognome: document.getElementById('bookingCognome').value.trim(),
             nome: document.getElementById('bookingNome').value.trim(),
-            telefono: document.getElementById('bookingTelefono').value.trim()
+            telefono: document.getElementById('bookingTelefono').value.trim(),
+            // chi ha inserito la prenotazione (utente collegato, vedi js/accesso.js)
+            inseritoDa: utenteCorrente ? utenteCorrente.nome : '',
+            inseritoIl: new Date().toISOString()
         };
         updateSeatsOnCloud(pendingAction, data);
         closeModal('bookingModal');
@@ -489,6 +506,10 @@
             html += `<hr style="margin:10px 0; border:0; border-top:1px solid #eee;">
                      <div>👤 ${esc(seat.booking.cognome)} ${esc(seat.booking.nome)}</div>
                      <div style="margin-top:5px;">📞 <a href="tel:${esc(seat.booking.telefono)}">${esc(seat.booking.telefono)}</a></div>`;
+            if(seat.booking.inseritoDa) {
+                const quando = seat.booking.inseritoIl ? new Date(seat.booking.inseritoIl).toLocaleString('it-IT') : '';
+                html += `<div style="margin-top:8px; font-size:0.8rem; color:#7f8c8d;">Inserito da ${esc(seat.booking.inseritoDa)}${quando ? ' il ' + esc(quando) : ''}</div>`;
+            }
         }
         
         document.getElementById('detailsContent').innerHTML = html;
@@ -552,7 +573,8 @@
                             name: seat.booking.cognome + ' ' + seat.booking.nome,
                             phone: seat.booking.telefono,
                             seat: `${area.toUpperCase()} ${row}-${seat.id}`,
-                            state: seat.state
+                            state: seat.state,
+                            da: seat.booking.inseritoDa || ""
                         });
                     }
                 });
@@ -575,6 +597,7 @@
                     <div style="font-weight:bold;">${esc(item.name)}</div>
                     <div style="font-size:0.8rem; color:#666;">${esc(item.seat)} - ${esc(item.state.toUpperCase())}</div>
                     ${item.phone ? `<div style="font-size:0.8rem;">📞 ${esc(item.phone)}</div>` : ''}
+                    ${item.da ? `<div style="font-size:0.75rem; color:#95a5a6;">inserito da ${esc(item.da)}</div>` : ''}
                 `;
                 container.appendChild(div);
             });
@@ -707,15 +730,6 @@
     }
 
     // --- FUNZIONE LOGIN ---
-    function checkLogin() {
-        const pass = document.getElementById('appPass').value;
-        if(pass === 'frullatore543') {
-            document.getElementById('loginOverlay').style.display = 'none';
-        } else {
-            alert("Password Errata! Riprova.");
-            document.getElementById('appPass').value = '';
-        }
-    }
 
     // --- FUNZIONE BACKUP TOTALE SALVAVITA ---
     // --- GENERATORE PDF PER BACKUP (Helper interno) ---

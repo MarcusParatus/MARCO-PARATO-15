@@ -17,6 +17,7 @@
     <!-- FIREBASE (IL MOTORE DEL DATABASE) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <!-- LIBRERIA PER CREARE ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -25,10 +26,46 @@
 <body>
 
     <!-- SCHERMATA LOGIN -->
-<div id="loginOverlay" style="position:fixed; inset:0; background:#2c3e50; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;">
-    <h2 style="margin-bottom:20px;">🔐 Area Riservata</h2>
-    <input type="password" id="appPass" placeholder="Inserisci Password" style="padding:12px; font-size:1.1rem; border-radius:5px; border:none; margin-bottom:15px; text-align:center;">
-    <button onclick="checkLogin()" class="btn btn-primary" style="width:auto; padding:10px 30px;">Entra</button>
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <h2>🎭 MARCUS Cloud</h2>
+
+        <!-- Accesso -->
+        <form id="formAccesso" class="accesso-pannello">
+            <input type="email" id="accessoEmail" placeholder="Email" autocomplete="username" required>
+            <input type="password" id="accessoPassword" placeholder="Password" autocomplete="current-password" required>
+            <button type="submit" class="btn btn-primary">Entra</button>
+            <a href="#" onclick="mostraAccesso('registra'); return false;">Prima volta? Registrati</a>
+            <a href="#" onclick="passwordDimenticata(); return false;">Password dimenticata?</a>
+        </form>
+
+        <!-- Registrazione -->
+        <form id="formRegistra" class="accesso-pannello" hidden>
+            <input type="text" id="registraNome" placeholder="Nome e cognome" autocomplete="name" required>
+            <input type="email" id="registraEmail" placeholder="Email" autocomplete="username" required>
+            <input type="password" id="registraPassword" placeholder="Password (almeno 6 caratteri)" autocomplete="new-password" minlength="6" required>
+            <button type="submit" class="btn btn-success">Registrati</button>
+            <a href="#" onclick="mostraAccesso('login'); return false;">Hai già un account? Entra</a>
+        </form>
+
+        <!-- In attesa di approvazione -->
+        <div id="pannelloAttesa" class="accesso-pannello" hidden>
+            <p style="font-size:2rem;">⏳</p>
+            <p>Richiesta inviata.<br>Potrai entrare appena l'amministratore approva il tuo account.</p>
+            <p class="accesso-chi"></p>
+            <button type="button" class="btn btn-sec" onclick="esci()">Esci</button>
+        </div>
+
+        <!-- Accesso revocato -->
+        <div id="pannelloRevocato" class="accesso-pannello" hidden>
+            <p style="font-size:2rem;">⛔</p>
+            <p>Il tuo accesso è stato revocato.<br>Se pensi sia un errore, contatta l'amministratore.</p>
+            <p class="accesso-chi"></p>
+            <button type="button" class="btn btn-sec" onclick="esci()">Esci</button>
+        </div>
+
+        <div id="accessoMsg" class="accesso-msg"></div>
+    </div>
 </div>
 
 <div class="app-container">
@@ -44,6 +81,13 @@
         <div style="margin-bottom: 10px; font-size: 0.8rem; color: #bdc3c7;">
             <div class="status-indicator" id="dbStatus"></div> <span id="statusText">Connessione...</span>
         </div>
+
+        <!-- UTENTE COLLEGATO -->
+        <div class="utente-box">
+            <span>👤 <span id="utenteNome"></span></span>
+            <button type="button" onclick="esci()" class="btn btn-sec" style="width:auto; margin:0; padding:5px 10px; font-size:0.8rem;">Esci</button>
+        </div>
+        <button type="button" id="btnCollaboratori" onclick="apriCollaboratori()" class="btn btn-info" style="display:none;">👥 Collaboratori <span id="badgeAttesa" class="badge-attesa"></span></button>
 
         <!-- INIZIO NUOVA RICERCA -->
         <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; margin-bottom:15px;">
@@ -187,6 +231,16 @@
     </div>
 </div>
 
+<!-- MODALE COLLABORATORI (solo amministratore) -->
+<div class="modal" id="collaboratoriModal">
+    <div class="modal-content" style="max-width:600px;">
+        <h3>👥 Collaboratori</h3>
+        <p style="font-size:0.85rem; color:#7f8c8d; margin:5px 0 10px;">Chi si registra compare qui "in attesa". Approva per farlo entrare, revoca per toglierli l'accesso.</p>
+        <div id="collaboratoriLista" style="max-height:60vh; overflow-y:auto; margin-bottom:10px;"></div>
+        <button onclick="closeModal('collaboratoriModal')" class="btn" style="background:#95a5a6;">Chiudi</button>
+    </div>
+</div>
+
 <!-- MODALE STAMPA BIGLIETTI -->
 <div class="modal" id="ticketModal">
     <div class="modal-content">
@@ -206,5 +260,6 @@
 </div>
 
 <script src="js/app.js"></script>
+<script src="js/accesso.js"></script>
 </body>
 </html>
