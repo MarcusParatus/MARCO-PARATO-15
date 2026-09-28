@@ -71,6 +71,18 @@
     let selected = [];
     let extraVisible = false;
     let pendingAction = null;
+    let seenAtSelection = {}; // com'era ogni posto quando è stato selezionato (per scoprire modifiche altrui)
+
+    // "Impronta" di un posto: stato + dati cliente. Se cambia, qualcun altro lo ha modificato.
+    function impronta(seat) {
+        if(!seat) return '';
+        const b = seat.booking;
+        return seat.state + '|' + (b ? [b.cognome, b.nome, b.telefono].join('|') : '');
+    }
+    function ricordaPosto(key) {
+        const [a, r, i] = key.split('|');
+        seenAtSelection[key] = impronta(localEvents[currentEventId].maps[a][r][i]);
+    }
 
     // --- AVVIO ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -297,7 +309,7 @@
 
     function toggleSelect(key) {
         if(selected.includes(key)) selected = selected.filter(k => k !== key);
-        else selected.push(key);
+        else { selected.push(key); ricordaPosto(key); }
         renderMap(); // Rerender locale rapido per mostrare la selezione
     }
 
@@ -372,22 +384,40 @@
     function updateSeatsOnCloud(newState, bookingData) {
         if(selected.length === 0) return;
         
-        // Creiamo un oggetto di aggiornamenti per Firebase
-        // Per aggiornare solo i posti specifici senza sovrascrivere tutto l'evento
-        let updates = {};
-        
-        selected.forEach(key => {
-            const [area, row, idx] = key.split('|');
-            const path = `events/${currentEventId}/maps/${area}/${row}/${idx}`;
-            
-            updates[path + '/state'] = newState;
-            updates[path + '/booking'] = (newState === 'free') ? null : bookingData;
-        });
+        const chiavi = selected.slice();
+        let conflitti = [];
 
-        // Invio atomico
-        db.ref().update(updates)
-            .then(() => {
-                selected = [];
+        // Transazione: Firebase riesegue questa funzione con i dati aggiornati se un altro
+        // collaboratore ha scritto nel frattempo. Se un posto non è più com'era quando
+        // l'abbiamo selezionato, si annulla tutto (return senza valore) e non si salva nulla.
+        db.ref(`events/${currentEventId}/maps`).transaction(maps => {
+            if(!maps) return maps; // dati locali non ancora pronti: Firebase riprova con quelli del server
+            conflitti = [];
+            chiavi.forEach(key => {
+                const [area, row, idx] = key.split('|');
+                const seat = maps[area] && maps[area][row] && maps[area][row][idx];
+                if(!seat || impronta(seat) !== seenAtSelection[key]) conflitti.push(key);
+            });
+            if(conflitti.length > 0) return;
+            chiavi.forEach(key => {
+                const [area, row, idx] = key.split('|');
+                maps[area][row][idx].state = newState;
+                maps[area][row][idx].booking = (newState === 'free') ? null : bookingData;
+            });
+            return maps;
+        })
+            .then(res => {
+                if(!res.committed) {
+                    const evt = localEvents[currentEventId];
+                    const elenco = conflitti.slice(0, 5).map(k => {
+                        const [a, r, i] = k.split('|'); const s = evt.maps[a][r][i];
+                        return `${a.toUpperCase()} ${r}-${s.id}: ora ${s.state.toUpperCase()}${s.booking ? ' (' + s.booking.cognome + ')' : ''}`;
+                    }).join('\n');
+                    alert(`⚠️ Nessun posto salvato.\n\n${conflitti.length} posti sono stati modificati da un altro collaboratore mentre li avevi selezionati:\n${elenco}\n\nLi ho tolti dalla selezione: controlla la mappa e riprova.`);
+                    selected = selected.filter(k => !conflitti.includes(k));
+                } else {
+                    selected = [];
+                }
                 // Il listener on('value') ridisegna PRIMA di questo punto, con la selezione ancora attiva:
                 // serve un ridisegno per togliere l'evidenziazione
                 renderMap();
@@ -483,6 +513,7 @@
                         const nomeCompleto = (seat.booking.cognome + " " + seat.booking.nome).toLowerCase();
                         if(nomeCompleto.includes(query)) {
                             selected.push(`${area}|${row}|${idx}`);
+                            ricordaPosto(`${area}|${row}|${idx}`);
                             if(!foundArea) foundArea = area;
                         }
                     }
